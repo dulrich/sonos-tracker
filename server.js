@@ -47,6 +47,7 @@ function get_track(timed) {
 		}
 		else if (track) {
 			if (!cur_track || !compare(track, cur_track)) {
+				if (cur_track) console.log('...');
 				console.log(track.artist + ' : ' + track.title);
 			}
 			
@@ -57,7 +58,7 @@ function get_track(timed) {
 		if (!timed && (diff < 60)) {
 			setTimeout(function() {
 				get_track(true);
-			}, diff * 1000);
+			}, (diff + 3) * 1000);
 		}
 	});
 }
