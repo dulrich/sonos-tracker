@@ -48,7 +48,13 @@ function get_track(timed) {
 		else if (track) {
 			if (!cur_track || !compare(track, cur_track)) {
 				if (cur_track) console.log('...');
-				console.log(track.artist + ' : ' + track.title);
+				console.log('['
+					+ ('0' + (track.duration / 60).toFixed(0)).slice(-2)
+					+ ':'
+					+ ('0' + (track.duration % 60).toFixed(0)).slice(-2)
+					+ '] '
+					+ track.artist + ' : ' + track.title
+				);
 			}
 			
 			cur_track = track;
