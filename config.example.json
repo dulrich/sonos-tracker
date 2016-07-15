@@ -1,4 +1,8 @@
 {
+	"db_host" : "127.0.0.1",
+	"db_name" : "sonos_tracker",
+	"db_user" : "sonos_tracker",
+	"db_pass" : "sonos_password",
 	"host" : "127.0.0.1",
 	"port" : 1400
 }

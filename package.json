@@ -1,0 +1,25 @@
+{
+  "name": "sonos-tracker",
+  "version": "1.0.0",
+  "description": "display current track in terminal whenever it changes",
+  "main": "server.js",
+  "dependencies": {
+    "mysql": "^2.11.1",
+    "sonos": "^0.12.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dulrich/sonos-tracker.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dulrich/sonos-tracker/issues"
+  },
+  "homepage": "https://github.com/dulrich/sonos-tracker#readme"
+}
