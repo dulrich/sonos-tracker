@@ -50,6 +50,11 @@ function get_track(timed) {
 			return;
 		}
 		else if (track) {
+			track.album = string(track.album);
+			track.artist = string(track.artist);
+			track.duration = int(track.duration);
+			track.title = string(track.title);
+			
 			if (!cur_track || !compare(track, cur_track)) {
 				if (cur_track) console.log('...');
 				
@@ -98,6 +103,8 @@ function log_track(track) {
 			var param = res[0];
 			
 			if (err) return console.error(err);
+			
+			if (!param) return console.error('empty param');
 			
 			query(db, {
 				query : `SELECT

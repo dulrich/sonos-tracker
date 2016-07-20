@@ -137,10 +137,10 @@ function query(db,q,cb) {
 		
 		param_s = match.substr(1);
 		
-		if (!query_o.param[param_s] && !query_o.ignore) {
+		if (typeof query_o.param[param_s] === 'undefined' && !query_o.ignore) {
 			exited = true;
 			
-			cb("query: unmatched template variable " + match[0],null);
+			cb("query: unmatched template variable " + match[0] + " (" + param_s + ")",null);
 			return "";
 		}
 		
