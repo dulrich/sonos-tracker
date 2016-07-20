@@ -113,15 +113,14 @@ function log_track(track) {
 				if (err) return console.error(err);
 				
 				if (res[0].plays > 0) {
-					s.next();
+					s.next(function() {
+						// nothing
+					});
 					
 					console.log("Skipping... " + track.artist + ' : ' + track.title);
 					
 					query(db, {
-						query : `UPDATE
-							song
-						SET songSkips = songSkips + 1
-						WHERE songID = ?id`,
+						query : `INSERT INTO song_log (songID, songSkip) VALUES (?id, 1)`,
 						param : param
 					}, function(err, res) {
 						if (err) return console.error(err);
@@ -141,6 +140,7 @@ function log_track(track) {
 						count(*) AS plays
 					FROM song_log
 					WHERE songID = ?id
+						AND songSkip = 0
 						AND songLogTime > DATE_ADD(NOW(), INTERVAL -?duration SECOND)`,
 					param : {
 						id       : param.id,
