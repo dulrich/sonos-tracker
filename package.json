@@ -4,6 +4,7 @@
   "description": "display current track in terminal whenever it changes",
   "main": "server.js",
   "dependencies": {
+    "async": "^2.0.0",
     "mysql": "^2.11.1",
     "sonos": "^0.12.0"
   },

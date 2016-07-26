@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+var async = require("async");
+
 var mysql = require('mysql');
 
 var sonos = require("sonos");
@@ -25,8 +27,12 @@ if (!config || typeof config !== 'object') {
 	process.exit(1);
 }
 
-config.host = config.host || '127.0.0.1';
-config.port = config.port || 1400;
+config.epsilon     = int(config.epsilon)     || 3;
+config.interval    = int(config.interval)    || 60;
+config.host        = string(config.host)     || '127.0.0.1';
+config.port        = int(config.port)        || 1400;
+config.play_limit  = int(config.play_limit)  || 0;
+config.skip_window = int(config.skip_window) || 60;
 
 var s = new sonos.Sonos(config.host, config.port);
 
@@ -34,9 +40,9 @@ var cur_track = null;
 
 function compare(a, b) {
 	return (
-		(a.title === b.title) &&
-		(a.artist === b.artist) &&
-		(a.album === b.album) &&
+		(a.title    === b.title)  &&
+		(a.artist   === b.artist) &&
+		(a.album    === b.album)  &&
 		(a.duration === b.duration)
 	);
 }
@@ -50,10 +56,10 @@ function get_track(timed) {
 			return;
 		}
 		else if (track) {
-			track.album = string(track.album);
-			track.artist = string(track.artist);
+			track.album    = string(track.album);
+			track.artist   = string(track.artist);
 			track.duration = int(track.duration);
-			track.title = string(track.title);
+			track.title    = string(track.title);
 			
 			if (!cur_track || !compare(track, cur_track)) {
 				if (cur_track) console.log('...');
@@ -65,10 +71,10 @@ function get_track(timed) {
 		}
 		
 		diff = cur_track.duration - cur_track.position;
-		if (!timed && (diff < 60)) {
+		if (!timed && (diff < config.interval)) {
 			setTimeout(function() {
 				get_track(true);
-			}, (diff + 3) * 1000);
+			}, (diff + config.epsilon) * 1000);
 		}
 	});
 }
@@ -111,15 +117,16 @@ function log_track(track) {
 					count(*) AS plays
 				FROM song_log
 				WHERE songID = ?id
-					AND songLogTime BETWEEN DATE_ADD(NOW(), INTERVAL -60 HOUR) AND DATE_ADD(NOW(), INTERVAL -?duration SECOND)`,
+					AND songLogTime BETWEEN DATE_ADD(NOW(), INTERVAL -?skip_window HOUR) AND DATE_ADD(NOW(), INTERVAL -?duration SECOND)`,
 				param : {
-					id       : param.id,
-					duration : track.duration + 60
+					id          : param.id,
+					duration    : track.duration + 60,
+					skip_window : config.skip_window
 				}
 			}, function(err, res) {
 				if (err) return console.error(err);
 				
-				if (res[0].plays > 0) {
+				if (res[0].plays > config.play_limit) {
 					s.next(function() {
 						// nothing
 					});
@@ -137,7 +144,7 @@ function log_track(track) {
 					
 					setTimeout(function() {
 						get_track(false);
-					}, 2 * 1000);
+					}, config.epsilon * 1000);
 					
 					return;
 				}
@@ -174,7 +181,7 @@ function log_track(track) {
 
 setInterval(function() {
 	get_track(false);
-}, 60 * 1000);
+}, config.interval * 1000);
 
 
 var db;
