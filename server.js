@@ -19,6 +19,8 @@ var mysql = require('mysql');
 
 var sonos = require("sonos");
 
+var util  = require("util");
+
 var config = require('./config.json');
 
 require("./fn.js")(global);
@@ -112,23 +114,49 @@ function log_track(track) {
 			
 			if (!param) return console.error('empty param');
 			
-			query(db, {
-				query : `SELECT
-					count(*) AS plays
-				FROM song_log
-				WHERE songID = ?id
-					AND songLogTime BETWEEN DATE_ADD(NOW(), INTERVAL -?skip_window HOUR) AND DATE_ADD(NOW(), INTERVAL -?duration SECOND)`,
-				param : {
-					id          : param.id,
-					duration    : track.duration + 60,
-					skip_window : config.skip_window
+			async.series([
+				function(acb) {
+					query(db, {
+						query : `SELECT
+							count(*) AS plays
+						FROM song_log
+						WHERE songID = ?id
+							AND songLogTime BETWEEN DATE_ADD(NOW(), INTERVAL -?skip_window HOUR) AND DATE_ADD(NOW(), INTERVAL -?duration SECOND)`,
+						param : {
+							id          : param.id,
+							duration    : track.duration + 60,
+							skip_window : config.skip_window
+						}
+					}, acb);
+				},
+				function(acb) {
+					query(db, {
+						query : `SELECT
+							COUNT(*) AS bans
+						FROM ban
+						WHERE
+							(?album != '' AND banField = 'album' AND banValue = ?album) OR
+							(?artist != '' AND banField = 'artist' AND banValue = ?artist) OR
+							(?title != '' AND banField = 'title' AND banValue = ?title)`,
+						param : track
+					}, acb);
 				}
-			}, function(err, res) {
+			], function(err, res) {
 				if (err) return console.error(err);
 				
-				if (res[0].plays > config.play_limit) {
-					s.next(function() {
+				if ((res[0][0][0].plays > config.play_limit) || (res[1][0][0].bans > 0)) {
+					s.next(function(err, movedToNext) {
 						// nothing
+						console.log("skip err?", err);
+						console.log("moved to next?", movedToNext);
+						
+						if (err) {
+							console.log(util.inspect(err));
+							console.log(JSON.stringify(err));
+							s.flush(function() {
+								// nothing
+							})
+						}
 					});
 					
 					console.log("Skipping... " + track.artist + ' : ' + track.title);
